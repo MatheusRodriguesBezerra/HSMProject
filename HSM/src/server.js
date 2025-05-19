@@ -235,10 +235,6 @@ app.post('/verify', upload.fields([
     try {
         const { keyId } = req.body;
 
-        console.log(req.files);
-        console.log(req.file);
-        console.log(keyId);
-
         if (!keyId || !req.files.file || !req.files.signature) {
             return res.status(400).json({
                 status: 'error',
@@ -326,23 +322,29 @@ app.post('/encrypt/rsa', upload.single('file'), (req, res) => {
         const encryptedAesKey = crypto.publicEncrypt(
             {
                 key: keyPair.publicKey,
-                padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+                padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                oaepHash: 'sha256'
             },
             Buffer.concat([aesKey, iv])
         );
 
         // Cria o arquivo final combinando a chave AES criptografada e o arquivo criptografado
+        const keyLengthBuffer = Buffer.alloc(2);
+        keyLengthBuffer.writeUInt16BE(encryptedAesKey.length);
+        
         const finalBuffer = Buffer.concat([
-            Buffer.from([encryptedAesKey.length]), // 1 byte para o tamanho da chave
-            encryptedAesKey,                       // Chave AES criptografada
-            encryptedFile                          // Arquivo criptografado
+            keyLengthBuffer,           // 2 bytes para o tamanho da chave
+            encryptedAesKey,           // Chave AES criptografada
+            encryptedFile              // Arquivo criptografado
         ]);
 
         // Remove o arquivo temporário
         fs.unlinkSync(req.file.path);
 
         // Configura o cabeçalho para download do arquivo
-        const encryptedFileName = `${path.parse(req.file.originalname).name}.enc`;
+        const parsedName = path.parse(req.file.originalname);
+        const encryptedFileName = `encrypted.${parsedName.name}${parsedName.ext}`;
+        
         res.setHeader('Content-Type', 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename=${encryptedFileName}`);
         res.setHeader('Content-Length', finalBuffer.length);
@@ -367,15 +369,12 @@ app.post('/encrypt/rsa', upload.single('file'), (req, res) => {
 app.post('/decrypt/rsa', upload.single('file'), (req, res) => {
     try {
         const { keyId } = req.body;
-        console.log(keyId);
-        console.log(req.file);
         if (!keyId || !req.file) {
             return res.status(400).json({
                 status: 'error',
                 message: 'KeyId e arquivo criptografado são obrigatórios'
             });
         }
-        console.log(2)
 
         const keyPair = keyStore.get(keyId);
         if (!keyPair) {
@@ -385,55 +384,76 @@ app.post('/decrypt/rsa', upload.single('file'), (req, res) => {
             });
         }
 
-        console.log(3)
-
         // Lê o arquivo criptografado
         const encryptedBuffer = fs.readFileSync(req.file.path);
 
         // Extrai a chave AES criptografada e o arquivo criptografado
-        const keyLength = encryptedBuffer[0]; // Primeiro byte é o tamanho da chave
-        const encryptedAesKey = encryptedBuffer.slice(1, keyLength + 1);
-        const encryptedFile = encryptedBuffer.slice(keyLength + 1);
-
-        console.log(4)
+        const keyLength = encryptedBuffer.readUInt16BE(0); // Lê os primeiros 2 bytes como um número inteiro não assinado
+        
+        if (keyLength === 0 || keyLength >= encryptedBuffer.length) {
+            throw new Error('Tamanho da chave criptografada inválido');
+        }
+        
+        const encryptedAesKey = encryptedBuffer.slice(2, keyLength + 2);
+        
+        if (encryptedAesKey.length !== keyLength) {
+            throw new Error('Tamanho do buffer da chave AES não corresponde ao tamanho esperado');
+        }
+        
+        const encryptedFile = encryptedBuffer.slice(keyLength + 2);
 
         // Descriptografa a chave AES
-        const aesKeyWithIv = crypto.privateDecrypt(
-            {
-                key: keyPair.privateKey,
-                padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
-            },
-            encryptedAesKey
-        );
+        try {
+            const aesKeyWithIv = crypto.privateDecrypt(
+                {
+                    key: keyPair.privateKey,
+                    padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                    oaepHash: 'sha256'
+                },
+                encryptedAesKey
+            );
 
-        console.log(5)
+            // Separa a chave AES e o IV
+            const aesKey = aesKeyWithIv.slice(0, 32);
+            const iv = aesKeyWithIv.slice(32, 48);
 
-        // Separa a chave AES e o IV
-        const aesKey = aesKeyWithIv.slice(0, 32);
-        const iv = aesKeyWithIv.slice(32);
+            // Descriptografa o arquivo
+            const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, iv);
+            let decryptedFile = decipher.update(encryptedFile);
+            decryptedFile = Buffer.concat([decryptedFile, decipher.final()]);
 
-        console.log(6)
+            // Remove o arquivo temporário
+            fs.unlinkSync(req.file.path);
 
-        // Descriptografa o arquivo
-        const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, iv);
-        let decryptedFile = decipher.update(encryptedFile);
-        decryptedFile = Buffer.concat([decryptedFile, decipher.final()]);
+            // Configura o cabeçalho para download do arquivo
+            const parsedName = path.parse(req.file.originalname);
+            let decryptedFileName;
+            
+            // Remove o prefixo "encrypted." se existir
+            if (parsedName.name.startsWith('encrypted.')) {
+                decryptedFileName = parsedName.name.substring(10) + parsedName.ext;
+            } else {
+                decryptedFileName = parsedName.name + parsedName.ext;
+            }
+            
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Disposition', `attachment; filename=${decryptedFileName}`);
+            res.setHeader('Content-Length', decryptedFile.length);
 
-        console.log(7)
+            // Envia o arquivo descriptografado
+            res.send(decryptedFile);
+        } catch (error) {
+            // Garante que o arquivo temporário seja removido em caso de erro
+            if (req.file && fs.existsSync(req.file.path)) {
+                fs.unlinkSync(req.file.path);
+            }
 
-        // Remove o arquivo temporário
-        fs.unlinkSync(req.file.path);
-
-        // Configura o cabeçalho para download do arquivo
-        const decryptedFileName = path.parse(req.file.originalname).name.replace('.enc', '');
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename=${decryptedFileName}`);
-        res.setHeader('Content-Length', decryptedFile.length);
-
-        console.log(8)
-
-        // Envia o arquivo descriptografado
-        res.send(decryptedFile);
+            res.status(500).json({
+                status: 'error',
+                message: 'Erro ao descriptografar arquivo',
+                error: error.message
+            });
+        }
     } catch (error) {
         // Garante que o arquivo temporário seja removido em caso de erro
         if (req.file && fs.existsSync(req.file.path)) {
@@ -443,6 +463,40 @@ app.post('/decrypt/rsa', upload.single('file'), (req, res) => {
         res.status(500).json({
             status: 'error',
             message: 'Erro ao descriptografar arquivo',
+            error: error.message
+        });
+    }
+});
+
+// Obtém a chave pública de um ID de chave
+app.get('/getPublicKey', (req, res) => {
+    try {
+        const { keyId } = req.query;
+
+        if (!keyId) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ID da chave é obrigatório'
+            });
+        }
+
+        const keyPair = keyStore.get(keyId);
+        if (!keyPair) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Chave não encontrada'
+            });
+        }
+
+        res.json({
+            status: 'success',
+            keyId,
+            publicKey: keyPair.publicKey
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Erro ao obter chave pública',
             error: error.message
         });
     }
