@@ -132,6 +132,52 @@ class UserController {
             return res.status(500).json({ error: 'Erro interno do servidor' });
         }
     }
+
+    async encryptFile(req, res) {
+        try {
+            if (!req.user.userId) {
+                return res.status(401).json({ error: 'Usuário não autenticado' });
+            }
+
+            const { userName } = req.body;
+
+            if (!userName) {
+                return res.status(400).json({ error: 'Nome do usuário é obrigatório' });
+            }
+
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+            }
+
+            if (!req.file.buffer && !req.file.path) {
+                return res.status(400).json({ error: 'Arquivo inválido: sem buffer ou path' });
+            }
+
+            const result = await ServerManagementService.encryptFile(userName, req.file);
+
+            // Unir os arquivos criptografados em um único arquivo
+            const combinedEncrypted = Buffer.concat([
+                result.encrypted1.buffer,
+                result.encrypted2.buffer
+            ]);
+
+            // Criar um único arquivo criptografado
+            const encryptedFile = {
+                buffer: combinedEncrypted,
+                originalname: `${req.file.originalname}.enc`,
+                mimetype: 'application/octet-stream'
+            };
+
+            // Configurar o cabeçalho para download do arquivo
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Disposition', `attachment; filename=${encryptedFile.originalname}`);
+            
+            return res.send(encryptedFile.buffer);
+        } catch (error) {
+            console.error('Erro ao criptografar arquivo:', error);
+            return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+    }
 }
 
 module.exports = new UserController();

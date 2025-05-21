@@ -14,11 +14,12 @@ const upload = multer({
 
 router.post('/set-password/:code', UserController.setPassword);
 router.post('/sign-file', authMiddleware, upload.single('file'), UserController.signFile);
-
-// Rota para verificação de assinatura
 router.post('/verify-signature', authMiddleware, upload.fields([
     { name: 'file', maxCount: 1 },
     { name: 'signature', maxCount: 1 }
 ]), UserController.verifySignature);
+router.post('/encrypt', authMiddleware, upload.single('file'), UserController.encryptFile);
+
+// Rota para criptografia de arquivo
 
 module.exports = router; 

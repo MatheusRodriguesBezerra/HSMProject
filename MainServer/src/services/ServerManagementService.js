@@ -495,6 +495,141 @@ class ServerManagementService {
             }
         });
     }
+
+    async encryptFile(userName, file) {
+        try {
+            // 1. Buscar informações do usuário pelo nome
+            const [user] = await sequelize.query(
+                `SELECT server_name_1, key_reference_1, server_name_2, key_reference_2 
+                FROM users WHERE name = :userName`,
+                {
+                    replacements: { userName },
+                    type: sequelize.QueryTypes.SELECT
+                }
+            );
+
+            if (!user) {
+                throw new Error('Usuário não encontrado');
+            }
+
+            // 2. Verificar e criptografar com cada servidor
+            const encryptedFiles = [];
+            const servers = [
+                { name: user.server_name_1, keyId: user.key_reference_1 },
+                { name: user.server_name_2, keyId: user.key_reference_2 }
+            ];
+
+            for (const server of servers) {
+                const serverInfo = this.servers.find(s => s.name === server.name);
+                if (!serverInfo) {
+                    throw new Error(`Servidor ${server.name} não encontrado`);
+                }
+
+                // Verificar se o servidor está online
+                const isOnline = await this.ping(server.name);
+                if (!isOnline) {
+                    throw new Error(`Servidor ${server.name} está offline`);
+                }
+                
+                // Enviar arquivo para criptografia
+                const encrypted = await this.sendFileForEncryption(serverInfo, file, server.keyId);
+                encryptedFiles.push(encrypted);
+            }
+
+            // 3. Criar objetos de arquivo para cada criptografia
+            const encryptedFileObjects = {
+                encrypted1: {
+                    buffer: encryptedFiles[0],
+                    originalname: `${file.originalname}.enc`,
+                    mimetype: 'application/octet-stream'
+                },
+                encrypted2: {
+                    buffer: encryptedFiles[1],
+                    originalname: `${file.originalname}.enc`,
+                    mimetype: 'application/octet-stream'
+                }
+            };
+
+            return encryptedFileObjects;
+
+        } catch (error) {
+            console.error('Erro ao criptografar arquivo:', error);
+            throw error;
+        }
+    }
+
+    async sendFileForEncryption(server, file, keyId) {
+        return new Promise((resolve, reject) => {
+            if (!file) {
+                return reject(new Error('Arquivo não fornecido'));
+            }
+
+            const FormData = require('form-data');
+            const form = new FormData();
+            
+            try {
+                // Adiciona o arquivo ao form
+                form.append('file', file.buffer, {
+                    filename: file.originalname || 'arquivo',
+                    contentType: file.mimetype || 'application/octet-stream'
+                });
+                
+                // Adiciona o keyId ao form
+                form.append('keyId', keyId);
+
+                const options = {
+                    hostname: server.ip,
+                    port: server.port,
+                    path: '/encrypt/rsa',
+                    method: 'POST',
+                    headers: form.getHeaders(),
+                    timeout: 5000 // 5 segundos de timeout
+                };
+
+                const req = http.request(options, (res) => {
+                    let data = [];
+
+                    res.on('data', (chunk) => {
+                        data.push(chunk);
+                    });
+
+                    res.on('end', () => {
+                        const responseData = Buffer.concat(data);
+
+                        if (res.statusCode === 200) {
+                            resolve(responseData);
+                        } else {
+                            let errorMessage = `Erro ao criptografar arquivo: ${res.statusCode}`;
+                            try {
+                                const errorData = JSON.parse(responseData.toString());
+                                errorMessage += ` - ${errorData.message || ''}`;
+                                console.error('Detalhes do erro:', errorData);
+                            } catch (e) {
+                                console.error('Resposta do servidor (texto):', responseData.toString());
+                            }
+                            reject(new Error(errorMessage));
+                        }
+                    });
+                });
+
+                req.on('error', (error) => {
+                    console.error("Erro na requisição:", error);
+                    reject(error);
+                });
+
+                req.on('timeout', () => {
+                    req.destroy();
+                    reject(new Error('Timeout ao criptografar arquivo'));
+                });
+
+                // Envia o form
+                form.pipe(req);
+            } catch (error) {
+                console.error('Erro ao preparar o formulário:', error);
+                reject(error);
+            }
+        });
+    }
 }
 
 module.exports = new ServerManagementService();
