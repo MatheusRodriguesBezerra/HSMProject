@@ -10,14 +10,31 @@ let config = {
 };
 
 // Arquivos para armazenar as chaves
-let KEYS_FILE;
-let MASTER_KEY_FILE;
+let KEYS_FILE = path.join(config.keysDir, 'keystore.enc');
+let MASTER_KEY_FILE = path.join(config.keysDir, '.master.key');
+
+// Função para garantir que os diretórios existam
+function ensureDirectoriesExist() {
+    const dirs = [
+        path.join(process.cwd(), 'instances'),
+        path.join(process.cwd(), 'instances', config.instanceId),
+        config.keysDir
+    ];
+    
+    for (const dir of dirs) {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+    }
+}
 
 // Função para configurar o HSM
 function configure(newConfig) {
     config = { ...config, ...newConfig };
     KEYS_FILE = path.join(config.keysDir, 'keystore.enc');
     MASTER_KEY_FILE = path.join(config.keysDir, '.master.key');
+    ensureDirectoriesExist();
+    keyStore = loadKeys();
 }
 
 // Gera ou carrega a chave mestra
@@ -32,6 +49,12 @@ function getMasterKey() {
         }
     } catch (error) {
         console.error('Erro ao gerenciar chave mestra:', error);
+        console.error('Detalhes do erro:', {
+            message: error.message,
+            code: error.code,
+            path: MASTER_KEY_FILE,
+            stack: error.stack
+        });
         throw error;
     }
 }
@@ -75,12 +98,19 @@ function decryptData(encryptedData) {
 function loadKeys() {
     try {
         if (fs.existsSync(KEYS_FILE)) {
-            const encryptedData = JSON.parse(fs.readFileSync(KEYS_FILE, 'utf8'));
+            const fileContent = fs.readFileSync(KEYS_FILE, 'utf8');
+            const encryptedData = JSON.parse(fileContent);
             const decryptedData = decryptData(encryptedData);
             return new Map(Object.entries(JSON.parse(decryptedData)));
         }
     } catch (error) {
         console.error('Erro ao carregar chaves:', error);
+        console.error('Detalhes do erro:', {
+            message: error.message,
+            code: error.code,
+            path: KEYS_FILE,
+            stack: error.stack
+        });
     }
     return new Map();
 }
@@ -90,14 +120,22 @@ function saveKeys(keyStore) {
     try {
         const data = JSON.stringify(Object.fromEntries(keyStore));
         const encryptedData = encryptData(data);
-        fs.writeFileSync(KEYS_FILE, JSON.stringify(encryptedData), 'utf8');
+        const finalData = JSON.stringify(encryptedData);
+        fs.writeFileSync(KEYS_FILE, finalData, 'utf8');
     } catch (error) {
         console.error('Erro ao salvar chaves:', error);
+        console.error('Detalhes do erro:', {
+            message: error.message,
+            code: error.code,
+            path: KEYS_FILE,
+            stack: error.stack
+        });
+        throw error;
     }
 }
 
 // Simula o armazenamento seguro de chaves do HSM
-const keyStore = loadKeys();
+let keyStore = new Map();
 
 // Função para adicionar uma nova chave
 function addKey(keyId, keyData) {

@@ -29,6 +29,24 @@ const INSTANCE_DIR = path.join(process.cwd(), 'instances', args[2]);
 const UPLOADS_DIR = path.join(INSTANCE_DIR, 'uploads');
 const KEYS_DIR = path.join(INSTANCE_DIR, 'keys');
 
+// Verifica e cria os diretórios necessários
+[INSTANCE_DIR, UPLOADS_DIR, KEYS_DIR].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // Verifica permissões de escrita
+    try {
+        const testFile = path.join(dir, '.test');
+        fs.writeFileSync(testFile, 'test');
+        fs.unlinkSync(testFile);
+    } catch (error) {
+        console.error(`ERRO: Sem permissão de escrita em: ${dir}`);
+        console.error('Detalhes do erro:', error);
+        process.exit(1);
+    }
+});
+
 // Configura o HSM com os diretórios específicos desta instância
 HSM.configure({
     instanceId: INSTANCE_ID,
@@ -76,13 +94,6 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage: storage });
-
-// Criar diretórios necessários
-[INSTANCE_DIR, UPLOADS_DIR, KEYS_DIR].forEach(dir => {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
-});
 
 // Gera um par de chaves RSA
 app.post('/generateKeyPair', (req, res) => {
