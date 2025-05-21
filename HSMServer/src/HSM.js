@@ -187,7 +187,9 @@ function verifySignature(fileBuffer, signature, keyId) {
 
     const verifier = crypto.createVerify('SHA256');
     verifier.update(fileBuffer);
-    return verifier.verify(keyPair.publicKey, signature, 'base64');
+    const result = verifier.verify(keyPair.publicKey, signature, 'base64');
+    console.log(result)
+    return result;
 }
 
 // Criptografa um arquivo com RSA

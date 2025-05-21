@@ -7,16 +7,16 @@ const HSM = require('./HSM');
 require('dotenv').config();
 
 // Obtém o ID da instância e a porta dos argumentos da linha de comando
-const args = process.argv.slice(2);
-const INSTANCE_ID = args[2];
+const args = process.argv.slice(2); // Array<string>
+const INSTANCE_ID = args[2]; // string
 
 if(!INSTANCE_ID){
     console.error('Erro: É necessário fornecer o ID da instância');
     process.exit(1);
 }
 
-const PORT = parseInt(args[1]);
-const HOST = '127.0.0.1';
+const PORT = parseInt(args[1]); // number
+const HOST = '127.0.0.1'; // string
 
 // Valida se a porta é um número válido
 if (isNaN(PORT) || PORT < 1 || PORT > 65535) {
@@ -25,9 +25,9 @@ if (isNaN(PORT) || PORT < 1 || PORT > 65535) {
 }
 
 // Configura os diretórios base para esta instância
-const INSTANCE_DIR = path.join(process.cwd(), 'instances', args[2]);
-const UPLOADS_DIR = path.join(INSTANCE_DIR, 'uploads');
-const KEYS_DIR = path.join(INSTANCE_DIR, 'keys');
+const INSTANCE_DIR = path.join(process.cwd(), 'instances', args[2]); // string
+const UPLOADS_DIR = path.join(INSTANCE_DIR, 'uploads'); // string
+const KEYS_DIR = path.join(INSTANCE_DIR, 'keys'); // string
 
 // Verifica e cria os diretórios necessários
 [INSTANCE_DIR, UPLOADS_DIR, KEYS_DIR].forEach(dir => {
@@ -57,12 +57,12 @@ const app = express();
 
 // Middleware para verificar se a requisição vem do IP permitido
 const MainServerOnly = (req, res, next) => {
-    const clientIp = req.ip || req.connection.remoteAddress;
-    const allowedIp = process.env.ALLOWED_IP || '127.0.0.1';
+    const clientIp = req.ip || req.connection.remoteAddress; // string
+    const allowedIp = process.env.ALLOWED_IP || '127.0.0.1'; // string
     const isAllowed = clientIp === allowedIp || 
                      clientIp === '::1' || 
                      clientIp === `::ffff:${allowedIp}` ||
-                     clientIp.includes(`::ffff:${allowedIp}`);
+                     clientIp.includes(`::ffff:${allowedIp}`); // boolean
 
     if (!isAllowed) {
         return res.status(403).json({
@@ -75,8 +75,8 @@ const MainServerOnly = (req, res, next) => {
 
 // Configuração do CORS para aceitar apenas localhost
 const corsOptions = {
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-    optionsSuccessStatus: 200
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Array<string>
+    optionsSuccessStatus: 200 // number
 };
 
 // Middleware
@@ -90,15 +90,15 @@ const storage = multer.diskStorage({
         cb(null, UPLOADS_DIR)
     },
     filename: function (req, file, cb) {
-        cb(null, `${Date.now()}-${file.originalname}`)
+        cb(null, `${Date.now()}-${file.originalname}`) // string
     }
 });
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage }); // Multer.Multer
 
 // Gera um par de chaves RSA
 app.post('/generateKeyPair', (req, res) => {
     try {
-        const { keyId, publicKey } = HSM.generateKeyPair();
+        const { keyId, publicKey } = HSM.generateKeyPair(); // { keyId: string, publicKey: string }
         res.json({
             status: 'success',
             keyId,
@@ -116,7 +116,7 @@ app.post('/generateKeyPair', (req, res) => {
 // Assina um arquivo com RSA
 app.post('/sign', upload.single('file'), (req, res) => {
     try {
-        const { keyId } = req.body;
+        const { keyId } = req.body; // string
         
         if (!keyId || !req.file) {
             return res.status(400).json({
@@ -126,14 +126,14 @@ app.post('/sign', upload.single('file'), (req, res) => {
         }
 
         // Lê o arquivo e calcula a assinatura
-        const fileBuffer = fs.readFileSync(req.file.path);
-        const signature = HSM.signFile(fileBuffer, keyId);
+        const fileBuffer = fs.readFileSync(req.file.path); // Buffer
+        const signature = HSM.signFile(fileBuffer, keyId); // Buffer
 
         // Remove o arquivo temporário
         fs.unlinkSync(req.file.path);
 
         // Configura o cabeçalho para download do arquivo
-        const signatureFileName = `${path.parse(req.file.originalname).name}.sig`;
+        const signatureFileName = `${path.parse(req.file.originalname).name}.sig`; // string
         res.setHeader('Content-Type', 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename=${signatureFileName}`);
         res.setHeader('Content-Length', signature.length);
@@ -160,7 +160,7 @@ app.post('/verify', upload.fields([
     { name: 'signature', maxCount: 1 }
 ]), (req, res) => {
     try {
-        const { keyId } = req.body;
+        const { keyId } = req.body; // string
 
         if (!keyId || !req.files.file || !req.files.signature) {
             return res.status(400).json({
@@ -170,11 +170,11 @@ app.post('/verify', upload.fields([
         }
 
         // Lê o arquivo e a assinatura
-        const fileBuffer = fs.readFileSync(req.files.file[0].path);
-        const signature = fs.readFileSync(req.files.signature[0].path, 'utf8');
+        const fileBuffer = fs.readFileSync(req.files.file[0].path); // Buffer
+        const signature = fs.readFileSync(req.files.signature[0].path, 'utf8'); // string
 
         // Verifica a assinatura
-        const isValid = HSM.verifySignature(fileBuffer, signature, keyId);
+        const isValid = HSM.verifySignature(fileBuffer, signature, keyId); // boolean
 
         // Remove os arquivos temporários
         fs.unlinkSync(req.files.file[0].path);
@@ -207,7 +207,7 @@ app.post('/verify', upload.fields([
 // Criptografa um arquivo com RSA
 app.post('/encrypt/rsa', upload.single('file'), (req, res) => {
     try {
-        const { keyId } = req.body;
+        const { keyId } = req.body; // string
         if (!keyId || !req.file) {
             return res.status(400).json({
                 status: 'error',
@@ -216,17 +216,17 @@ app.post('/encrypt/rsa', upload.single('file'), (req, res) => {
         }
 
         // Lê o arquivo
-        const fileBuffer = fs.readFileSync(req.file.path);
+        const fileBuffer = fs.readFileSync(req.file.path); // Buffer
         
         // Criptografa o arquivo
-        const finalBuffer = HSM.encryptFileRSA(fileBuffer, keyId);
+        const finalBuffer = HSM.encryptFileRSA(fileBuffer, keyId); // Buffer
 
         // Remove o arquivo temporário
         fs.unlinkSync(req.file.path);
 
         // Configura o cabeçalho para download do arquivo
-        const parsedName = path.parse(req.file.originalname);
-        const encryptedFileName = `encrypted.${parsedName.name}${parsedName.ext}`;
+        const parsedName = path.parse(req.file.originalname); // { root: string, dir: string, base: string, ext: string, name: string }
+        const encryptedFileName = `encrypted.${parsedName.name}${parsedName.ext}`; // string
         
         res.setHeader('Content-Type', 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename=${encryptedFileName}`);
@@ -251,7 +251,7 @@ app.post('/encrypt/rsa', upload.single('file'), (req, res) => {
 // Descriptografa um arquivo com RSA
 app.post('/decrypt/rsa', upload.single('file'), (req, res) => {
     try {
-        const { keyId } = req.body;
+        const { keyId } = req.body; // string
         if (!keyId || !req.file) {
             return res.status(400).json({
                 status: 'error',
@@ -260,17 +260,17 @@ app.post('/decrypt/rsa', upload.single('file'), (req, res) => {
         }
 
         // Lê o arquivo criptografado
-        const encryptedBuffer = fs.readFileSync(req.file.path);
+        const encryptedBuffer = fs.readFileSync(req.file.path); // Buffer
 
         // Descriptografa o arquivo
-        const decryptedFile = HSM.decryptFileRSA(encryptedBuffer, keyId);
+        const decryptedFile = HSM.decryptFileRSA(encryptedBuffer, keyId); // Buffer
 
         // Remove o arquivo temporário
         fs.unlinkSync(req.file.path);
 
         // Configura o cabeçalho para download do arquivo
-        const parsedName = path.parse(req.file.originalname);
-        let decryptedFileName;
+        const parsedName = path.parse(req.file.originalname); // { root: string, dir: string, base: string, ext: string, name: string }
+        let decryptedFileName; // string
         
         // Remove o prefixo "encrypted." se existir
         if (parsedName.name.startsWith('encrypted.')) {
@@ -302,7 +302,7 @@ app.post('/decrypt/rsa', upload.single('file'), (req, res) => {
 // Obtém a chave pública de um ID de chave
 app.get('/getPublicKey', (req, res) => {
     try {
-        const { keyId } = req.query;
+        const { keyId } = req.query; // string
 
         if (!keyId) {
             return res.status(400).json({
@@ -311,7 +311,7 @@ app.get('/getPublicKey', (req, res) => {
             });
         }
 
-        const publicKey = HSM.getPublicKey(keyId);
+        const publicKey = HSM.getPublicKey(keyId); // string
 
         res.json({
             status: 'success',
