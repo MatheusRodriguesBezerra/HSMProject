@@ -12,14 +12,16 @@ const upload = multer({
     }
 });
 
+// Rotas de autenticação
 router.post('/set-password/:code', UserController.setPassword);
+
+// Rotas protegidas que requerem autenticação
 router.post('/sign-file', authMiddleware, upload.single('file'), UserController.signFile);
 router.post('/verify-signature', authMiddleware, upload.fields([
     { name: 'file', maxCount: 1 },
     { name: 'signature', maxCount: 1 }
 ]), UserController.verifySignature);
 router.post('/encrypt', authMiddleware, upload.single('file'), UserController.encryptFile);
-
-// Rota para criptografia de arquivo
+router.post('/decrypt', authMiddleware, upload.single('file'), UserController.decryptFile);
 
 module.exports = router; 

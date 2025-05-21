@@ -630,6 +630,140 @@ class ServerManagementService {
             }
         });
     }
+
+    async decryptFile(userId, file) {
+        try {
+            // 1. Buscar informações do usuário pelo ID
+            const [user] = await sequelize.query(
+                `SELECT server_name_1, key_reference_1, server_name_2, key_reference_2 
+                FROM users WHERE id = :userId`,
+                {
+                    replacements: { userId },
+                    type: sequelize.QueryTypes.SELECT
+                }
+            );
+
+            if (!user) {
+                throw new Error('Usuário não encontrado');
+            }
+
+            // 2. Verificar servidores online
+            const servers = [
+                { name: user.server_name_1, keyId: user.key_reference_1 },
+                { name: user.server_name_2, keyId: user.key_reference_2 }
+            ];
+
+            const isServer1Online = await this.ping(servers[0].name);
+            const isServer2Online = await this.ping(servers[1].name);
+
+            if (!isServer1Online && !isServer2Online) {
+                throw new Error('Nenhum servidor está online para descriptografia');
+            }
+
+            let onlineServer = null;
+
+            if (isServer1Online) {
+                onlineServer = servers[0];
+            } else {
+                onlineServer = servers[1];
+            }
+
+            // 3. Dividir o arquivo criptografado em duas partes
+            const fileLength = file.buffer.length / 2;
+            const encryptedPart1 = file.buffer.slice(0, fileLength);
+            const encryptedPart2 = file.buffer.slice(fileLength);
+
+            const encryptedPart = isServer1Online ? encryptedPart1 : encryptedPart2;
+
+            const server = this.servers.find(s => s.name === onlineServer.name);
+
+            // 4. Enviar para descriptografia no servidor online
+            const decryptedFile = await this.sendFileForDecryption(server, encryptedPart, onlineServer.keyId);
+
+            return {
+                buffer: decryptedFile,
+                originalname: file.originalname.replace('.enc', ''),
+                mimetype: 'application/octet-stream'
+            };
+
+        } catch (error) {
+            console.error('Erro ao descriptografar arquivo:', error);
+            throw error;
+        }
+    }
+
+    async sendFileForDecryption(server, file, keyId) {
+        return new Promise((resolve, reject) => {
+            if (!file) {
+                return reject(new Error('Arquivo não fornecido'));
+            }
+
+            const FormData = require('form-data');
+            const form = new FormData();
+            
+            try {
+                // Adiciona o arquivo ao form
+                form.append('file', file, {
+                    filename: 'encrypted_file',
+                    contentType: 'application/octet-stream'
+                });
+                
+                // Adiciona o keyId ao form
+                form.append('keyId', keyId);
+
+                const options = {
+                    hostname: server.ip,
+                    port: server.port,
+                    path: '/decrypt/rsa',
+                    method: 'POST',
+                    headers: form.getHeaders(),
+                    timeout: 5000 // 5 segundos de timeout
+                };
+
+                const req = http.request(options, (res) => {
+                    let data = [];
+
+                    res.on('data', (chunk) => {
+                        data.push(chunk);
+                    });
+
+                    res.on('end', () => {
+                        const responseData = Buffer.concat(data);
+
+                        if (res.statusCode === 200) {
+                            resolve(responseData);
+                        } else {
+                            let errorMessage = `Erro ao descriptografar arquivo: ${res.statusCode}`;
+                            try {
+                                const errorData = JSON.parse(responseData.toString());
+                                errorMessage += ` - ${errorData.message || ''}`;
+                                console.error('Detalhes do erro:', errorData);
+                            } catch (e) {
+                                console.error('Resposta do servidor (texto):', responseData.toString());
+                            }
+                            reject(new Error(errorMessage));
+                        }
+                    });
+                });
+
+                req.on('error', (error) => {
+                    console.error("Erro na requisição:", error);
+                    reject(error);
+                });
+
+                req.on('timeout', () => {
+                    req.destroy();
+                    reject(new Error('Timeout ao descriptografar arquivo'));
+                });
+
+                // Envia o form
+                form.pipe(req);
+            } catch (error) {
+                console.error('Erro ao preparar o formulário:', error);
+                reject(error);
+            }
+        });
+    }
 }
 
 module.exports = new ServerManagementService();

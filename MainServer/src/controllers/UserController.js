@@ -178,6 +178,33 @@ class UserController {
             return res.status(500).json({ error: 'Erro interno do servidor' });
         }
     }
+
+    async decryptFile(req, res) {
+        try {
+            if (!req.user.userId) {
+                return res.status(401).json({ error: 'Usuário não autenticado' });
+            }
+
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+            }
+
+            if (!req.file.buffer && !req.file.path) {
+                return res.status(400).json({ error: 'Arquivo inválido: sem buffer ou path' });
+            }
+
+            const result = await ServerManagementService.decryptFile(req.user.userId, req.file);
+
+            // Configurar o cabeçalho para download do arquivo
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Disposition', `attachment; filename=${result.originalname}`);
+            
+            return res.send(result.buffer);
+        } catch (error) {
+            console.error('Erro ao descriptografar arquivo:', error);
+            return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+    }
 }
 
 module.exports = new UserController();
