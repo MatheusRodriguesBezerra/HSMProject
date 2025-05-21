@@ -1,181 +1,224 @@
 # HSM Simulator API
 
-Esta API simula as funcionalidades básicas de um Hardware Security Module (HSM), oferecendo operações criptográficas seguras para arquivos.
+Esta API simula as funcionalidades avançadas de um Hardware Security Module (HSM), oferecendo um ambiente seguro para operações criptográficas e gerenciamento de chaves. O simulador foi projetado para fins educacionais e de desenvolvimento, implementando as principais funcionalidades encontradas em HSMs comerciais.
 
-## Funcionalidades
+## Visão Geral
 
-- Geração de par de chaves RSA
-- Assinatura digital de arquivos com RSA
-- Verificação de assinatura de arquivos com RSA
-- Criptografia de arquivos com RSA/AES híbrido
-- Descriptografia de arquivos com RSA/AES híbrido
+O HSM Simulator é uma aplicação Node.js que fornece uma API RESTful para:
+- Gerenciamento completo do ciclo de vida de chaves criptográficas
+- Operações criptográficas seguras
+- Simulação de proteção física e lógica de chaves
+- Interface para operações em lote
+- Logging e auditoria de operações
+
+## Funcionalidades Principais
+
+### Gerenciamento de Chaves
+- Geração de par de chaves RSA (2048/4096 bits)
+- Importação e exportação segura de chaves
+- Backup e restauração de chaves
+- Rotação automática de chaves
+- Destruição segura de material criptográfico
+
+### Operações Criptográficas
+- Assinatura digital RSA com PSS
+- Verificação de assinaturas
+- Criptografia híbrida RSA/AES
+- Descriptografia de dados
+- Geração de hash (SHA-256/SHA-512)
+- Geração de números aleatórios seguros
+
+## Arquitetura do Sistema
+
+```
+HSMServer/
+├── src/                    # Código fonte
+│   ├── config/            # Configurações do sistema
+│   ├── controllers/       # Controladores da API
+│   ├── crypto/           # Implementações criptográficas
+│   ├── middleware/        # Middlewares Express
+│   ├── models/           # Modelos de dados
+│   ├── routes/           # Rotas da API
+│   ├── utils/            # Utilitários
+│   └── server.js         # Entrada da aplicação
+├── instances/            # Instâncias de HSM virtuais
+├── tests/                # Testes automatizados
+└── docs/                 # Documentação adicional
+```
+
+## Requisitos do Sistema
+
+- Node.js 14.x ou superior
+- Sistema operacional: Linux, Windows ou macOS
+- Mínimo de 2GB de RAM
+- 1GB de espaço em disco
 
 ## Instalação
 
-1. Clone o repositório
+1. Clone o repositório:
+```bash
+git clone https://seu-repositorio/hsm-simulator.git
+cd hsm-simulator
+```
+
 2. Instale as dependências:
 ```bash
 npm install
 ```
-3. Inicie o servidor:
+
+3. Configure o ambiente:
 ```bash
-npm start
+cp .env.example .env
 ```
 
-Para desenvolvimento, você pode usar:
-```bash
-npm run dev
+4. Configure as variáveis de ambiente no arquivo `.env`:
+```env
+# Configurações do Servidor
+PORT=3000
+NODE_ENV=development
+
+# Configurações de Segurança
+SESSION_SECRET=sua_chave_secreta
+MAX_SESSIONS=10
+KEY_ROTATION_INTERVAL=86400
+
+# Configurações de Storage
+TEMP_DIR=./temp
+KEYS_DIR=./keys
+BACKUP_DIR=./backup
+
+# Configurações de Log
+LOG_LEVEL=info
+AUDIT_LOG=true
 ```
 
-## Endpoints
+## Endpoints da API
 
-### 1. Gerar Par de Chaves RSA
+### Gerenciamento de Chaves
+
+#### Geração de Par de Chaves RSA
 ```http
-POST /generateKeyPair
-```
-Resposta:
-```json
+POST /api/v1/keys/generate
+Content-Type: application/json
+
 {
-    "status": "success",
-    "keyId": "uuid-da-chave",
-    "publicKey": "chave-publica-pem"
+    "algorithm": "RSA",
+    "keySize": 2048,
+    "label": "minha-chave",
+    "attributes": {
+        "extractable": false,
+        "sensitive": true
+    }
 }
 ```
 
-### 2. Assinar Arquivo com RSA
+#### Importação de Chave
 ```http
-POST /sign
+POST /api/v1/keys/import
+Content-Type: application/json
+
+{
+    "keyMaterial": "base64-encoded-key",
+    "format": "pkcs8",
+    "label": "chave-importada"
+}
+```
+
+### Operações Criptográficas
+
+#### Assinatura Digital
+```http
+POST /api/v1/crypto/sign
 Content-Type: multipart/form-data
-```
-Parâmetros:
-- `file`: Arquivo a ser assinado
-- `keyId`: ID da chave RSA
 
-Resposta:
-```json
-{
-    "status": "success",
-    "originalFile": "nome-do-arquivo",
-    "signatureFile": "nome-do-arquivo.sig"
-}
+Parameters:
+- file: <arquivo>
+- keyId: <uuid>
+- algorithm: "RSA-PSS-SHA256"
 ```
 
-### 3. Verificar Assinatura de Arquivo
+#### Criptografia de Dados
 ```http
-POST /verify
+POST /api/v1/crypto/encrypt
 Content-Type: multipart/form-data
-```
-Parâmetros:
-- `file`: Arquivo original
-- `signature`: Arquivo de assinatura (.sig)
-- `keyId`: ID da chave RSA
 
-Resposta:
-```json
-{
-    "status": "success",
-    "isValid": true/false
-}
-```
-
-### 4. Criptografar Arquivo (RSA/AES Híbrido)
-```http
-POST /encrypt/rsa
-Content-Type: multipart/form-data
-```
-Parâmetros:
-- `file`: Arquivo a ser criptografado
-- `keyId`: ID da chave RSA
-
-Resposta:
-```json
-{
-    "status": "success",
-    "encryptedFile": "nome-do-arquivo.enc",
-    "keyFile": "nome-do-arquivo.key"
-}
-```
-
-### 5. Descriptografar Arquivo (RSA/AES Híbrido)
-```http
-POST /decrypt/rsa
-Content-Type: multipart/form-data
-```
-Parâmetros:
-- `file`: Arquivo criptografado (.enc)
-- `keyFile`: Arquivo da chave (.key)
-- `keyId`: ID da chave RSA
-
-Resposta:
-```json
-{
-    "status": "success",
-    "decryptedFile": "nome-do-arquivo-original"
-}
+Parameters:
+- file: <arquivo>
+- keyId: <uuid>
+- mode: "hybrid"
 ```
 
 ## Características de Segurança
 
-- Utiliza RSA 2048 bits para operações assimétricas
-- Sistema híbrido RSA/AES para criptografia de arquivos
-  - AES-256-CBC para criptografia do arquivo
-  - RSA para criptografia da chave AES
-- Armazenamento seguro de chaves em memória
-- Geração segura de IVs aleatórios para AES
-- Padding OAEP para operações RSA
-- Hash SHA-256 para assinaturas digitais
+### Proteção de Chaves
+- Armazenamento seguro em memória protegida
+- Criptografia em repouso (at-rest encryption)
+- Controle de acesso baseado em roles (RBAC)
+- Proteção contra extração não autorizada
 
-## Estrutura de Diretórios
+### Medidas de Segurança
+- Rate limiting por IP e por sessão
+- Proteção contra ataques de timing
+- Sanitização de memória após operações
+- Validação rigorosa de entrada
+- Auditoria detalhada de operações
 
-- `/uploads`: Diretório temporário para upload de arquivos
-- `/encrypted`: Arquivos criptografados e suas chaves
-- `/decrypted`: Arquivos descriptografados
-- `/signed`: Arquivos assinados e suas assinaturas
+## Monitoramento e Logs
 
-## Observações de Segurança
+### Logs de Sistema
+- Logs de operações em formato estruturado
+- Rotação automática de logs
+- Níveis configuráveis de logging
+- Integração com sistemas externos (opcional)
 
-Este é um simulador para fins educacionais. Em um ambiente de produção, um HSM real oferece:
+### Auditoria
+- Registro detalhado de todas as operações
+- Timestamps precisos
+- Identificação de usuário/processo
+- Hash encadeado de eventos
 
-- Armazenamento físico seguro de chaves
-- Proteção contra adulteração física
-- Certificações de segurança (FIPS 140-2, Common Criteria)
-- Backup seguro de chaves
-- Controle de acesso robusto
-- Auditoria detalhada
+## Dependências Principais
 
-## Exemplo de Uso com cURL
+- express: ^4.18.2 - Framework web
+- crypto: ^1.0.1 - Operações criptográficas
+- dotenv: ^16.3.1 - Configuração de ambiente
+- cors: ^2.8.5 - Suporte a CORS
+- uuid: ^9.0.1 - Geração de identificadores únicos
+- multer: ^1.4.5-lts.1 - Upload de arquivos
 
-1. Gerar par de chaves:
-```bash
-curl -X POST http://localhost:3000/generateKeyPair
-```
+## Desenvolvimento
 
-2. Assinar um arquivo:
-```bash
-curl -X POST http://localhost:3000/sign \
-  -F "file=@/caminho/do/arquivo" \
-  -F "keyId=seu-key-id"
-```
+### Scripts Disponíveis
+- `npm start` - Inicia o servidor em modo produção
+- `npm run dev` - Inicia com hot-reload para desenvolvimento
 
-3. Verificar assinatura:
-```bash
-curl -X POST http://localhost:3000/verify \
-  -F "file=@/caminho/do/arquivo" \
-  -F "signature=@/caminho/do/arquivo.sig" \
-  -F "keyId=seu-key-id"
-```
+### Boas Práticas
+- Siga o guia de estilo do projeto
+- Documente novas funcionalidades
+- Adicione testes para novos recursos
+- Mantenha o logging consistente
 
-4. Criptografar arquivo:
-```bash
-curl -X POST http://localhost:3000/encrypt/rsa \
-  -F "file=@/caminho/do/arquivo" \
-  -F "keyId=seu-key-id"
-```
+## Limitações do Simulador
 
-5. Descriptografar arquivo:
-```bash
-curl -X POST http://localhost:3000/decrypt/rsa \
-  -F "file=@/caminho/do/arquivo.enc" \
-  -F "keyFile=@/caminho/do/arquivo.key" \
-  -F "keyId=seu-key-id"
-``` 
+Este simulador é para fins educacionais e de desenvolvimento. Em um HSM real você encontraria:
+- Proteção física contra adulteração
+- Circuitos de detecção de intrusão
+- Certificações FIPS 140-2 e Common Criteria
+- Hardware dedicado para operações criptográficas
+- Maior throughput de operações
+
+## Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+## Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## Suporte
+
+Para suporte e dúvidas, abra uma issue no repositório ou contate a equipe de desenvolvimento. 
