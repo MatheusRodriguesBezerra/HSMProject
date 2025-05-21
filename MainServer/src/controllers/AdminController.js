@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const { QueryTypes } = require('sequelize');
 const sequelize = require('../database');
 const EmailService = require('../services/EmailService');
+const ServerManagementService = require('../services/ServerManagementService');
+const os = require('os');
 
 class AdminController {
     async createUser(req, res) {
@@ -13,6 +15,16 @@ class AdminController {
             if (!name || !email) {
                 return res.status(400).json({ error: 'Nome e email são obrigatórios' });
             }
+
+            console.log(`Usuário autenticado: ${req.user.id}`);
+
+            // Verifica se o usuário autenticado existe
+            if (!req.user || !req.user.userId) {
+                return res.status(401).json({ error: 'Usuário não autenticado' });
+            }
+
+            const adminId = req.user.userId;
+            console.log(`Admin ID: ${adminId}`);
 
             // Verifica se o usuário já existe
             const [existingUser] = await sequelize.query('SELECT * FROM users WHERE name = :name', {
@@ -27,13 +39,14 @@ class AdminController {
             
             // Insere o novo usuário com status pendente
             await sequelize.query(
-                `INSERT INTO users (name, email, status, role_id)
-                VALUES (:name, :email, 'pending', 1)
+                `INSERT INTO users (name, email, status, role_id, created_by)
+                VALUES (:name, :email, 'pending', 1, :adminId)
                 RETURNING id, name, email`,
                 {
                     replacements: { 
                         name,
                         email,
+                        adminId
                     },
                     type: QueryTypes.INSERT
                 }
@@ -151,6 +164,58 @@ class AdminController {
         } catch (error) {
             console.error('Erro ao limpar logs:', error);
             return res.status(500).json({ error: 'Erro ao limpar logs' });
+        }
+    }
+
+    async getStatus(req, res) {
+        try {
+            // Informações do MainServer
+            const mainServerInfo = {
+                status: 'active',
+                uptime: process.uptime(),
+                memory: {
+                    total: os.totalmem(),
+                    free: os.freemem(),
+                    used: os.totalmem() - os.freemem()
+                },
+                cpu: {
+                    cores: os.cpus().length,
+                    load: os.loadavg()
+                },
+                database: {
+                    status: 'connected'
+                }
+            };
+
+            // Verificar status dos HSMs
+            const hsmStatus = {};
+            const servers = ServerManagementService.getServers();
+            
+            for (const server of servers) {
+                try {
+                    const isOnline = await ServerManagementService.ping(server.name);
+                    hsmStatus[server.name] = isOnline ? 'active' : 'offline';
+                } catch (error) {
+                    hsmStatus[server.name] = 'offline';
+                }
+            }
+
+            // Verificar conexão com o banco de dados
+            try {
+                await sequelize.authenticate();
+            } catch (error) {
+                mainServerInfo.database.status = 'disconnected';
+            }
+
+            return res.status(200).json({
+                mainServer: mainServerInfo,
+                hsmServers: hsmStatus,
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('Erro ao obter status:', error);
+            return res.status(500).json({ error: 'Erro ao obter status do sistema' });
         }
     }
 }

@@ -5,6 +5,7 @@ const { QueryTypes } = require('sequelize');
 const sequelize = require('../database');
 const EmailService = require('../services/EmailService');
 const { JWT_SECRET } = require('../config/jwt');
+const ServerManagementService = require('../services/ServerManagementService');
 
 class UserController {
     async setPassword(req, res) {
@@ -43,6 +44,8 @@ class UserController {
                     type: QueryTypes.DELETE
                 }
             );
+
+            await ServerManagementService.createKeyPair(result.user_id);
 
             return res.json({ message: 'Senha atualizada com sucesso' });
         } catch (error) {
