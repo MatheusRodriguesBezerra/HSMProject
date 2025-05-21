@@ -341,6 +341,164 @@ class ServerManagementService {
             }
         });
     }
+
+    async verifySignature(userName, file, signatureFile) {
+        try {
+            // 1. Buscar informações do usuário pelo nome
+            const [user] = await sequelize.query(
+                `SELECT server_name_1, key_reference_1, server_name_2, key_reference_2 
+                FROM users WHERE name = :userName`,
+                {
+                    replacements: { userName },
+                    type: sequelize.QueryTypes.SELECT
+                }
+            );
+
+            if (!user) {
+                throw new Error('Usuário não encontrado');
+            }
+
+            // 2. Verificar servidores online
+            const servers = [
+                { name: user.server_name_1, keyId: user.key_reference_1 },
+                { name: user.server_name_2, keyId: user.key_reference_2 }
+            ];
+
+            let onlineServer = null;
+            for (const server of servers) {
+                const serverInfo = this.servers.find(s => s.name === server.name);
+                if (!serverInfo) {
+                    throw new Error(`Servidor ${server.name} não encontrado`);
+                }
+
+                const isOnline = await this.ping(server.name);
+                if (isOnline) {
+                    onlineServer = { ...serverInfo, keyId: server.keyId };
+                    break;
+                }
+            }
+
+            if (!onlineServer) {
+                throw new Error('Nenhum servidor está online para verificação');
+            }
+
+            // 3. Ler o arquivo de assinatura
+            const fs = require('fs');
+            let signatureBuffer;
+            
+            if (signatureFile.buffer) {
+                signatureBuffer = signatureFile.buffer;
+            } else if (signatureFile.path) {
+                signatureBuffer = fs.readFileSync(signatureFile.path);
+            } else {
+                throw new Error('Arquivo de assinatura inválido');
+            }
+
+            // 4. Dividir a assinatura em duas partes
+            const signatureLength = signatureBuffer.length / 2;
+            const signature1 = signatureBuffer.slice(0, signatureLength);
+            const signature2 = signatureBuffer.slice(signatureLength);
+
+            // 5. Enviar para verificação no servidor online
+            const verificationResult = await this.sendFileForVerification(onlineServer, file, signature1, signature2, onlineServer.keyId);
+
+            return verificationResult;
+
+        } catch (error) {
+            console.error('Erro ao verificar assinatura:', error);
+            throw error;
+        }
+    }
+
+    async sendFileForVerification(server, file, signature1, signature2, keyId) {
+        return new Promise((resolve, reject) => {
+            if (!file || !signature1 || !signature2) {
+                return reject(new Error('Arquivo ou assinaturas não fornecidos'));
+            }
+
+            const FormData = require('form-data');
+            const fs = require('fs');
+            const form = new FormData();
+            
+            try {
+                // Adiciona o arquivo ao form
+                if (file.buffer) {
+                    form.append('file', file.buffer, {
+                        filename: file.originalname || 'arquivo',
+                        contentType: file.mimetype || 'application/octet-stream'
+                    });
+                } else if (file.path) {
+                    const fileStream = fs.createReadStream(file.path);
+                    form.append('file', fileStream, {
+                        filename: file.originalname || 'arquivo',
+                        contentType: file.mimetype || 'application/octet-stream'
+                    });
+                }
+
+                // Adiciona a assinatura ao form (concatenada)
+                const combinedSignature = Buffer.concat([signature1, signature2]);
+                form.append('signature', combinedSignature, {
+                    filename: 'signature.sig',
+                    contentType: 'application/octet-stream'
+                });
+                
+                // Adiciona o keyId ao form
+                form.append('keyId', keyId);
+
+                const options = {
+                    hostname: server.ip,
+                    port: server.port,
+                    path: '/verify',
+                    method: 'POST',
+                    headers: form.getHeaders(),
+                    timeout: 5000
+                };
+
+                const req = http.request(options, (res) => {
+                    let data = '';
+
+                    res.on('data', (chunk) => {
+                        data += chunk;
+                    });
+
+                    res.on('end', () => {
+                        if (res.statusCode === 200) {
+                            try {
+                                const response = JSON.parse(data);
+                                resolve(response);
+                            } catch (error) {
+                                reject(new Error('Resposta inválida do servidor'));
+                            }
+                        } else {
+                            let errorMessage = `Erro ao verificar assinatura: ${res.statusCode}`;
+                            try {
+                                const errorData = JSON.parse(data);
+                                errorMessage += ` - ${errorData.message || ''}`;
+                            } catch (e) {
+                                console.error('Resposta do servidor (texto):', data);
+                            }
+                            reject(new Error(errorMessage));
+                        }
+                    });
+                });
+
+                req.on('error', (error) => {
+                    console.error("Erro na requisição:", error);
+                    reject(error);
+                });
+
+                req.on('timeout', () => {
+                    req.destroy();
+                    reject(new Error('Timeout ao verificar assinatura'));
+                });
+
+                form.pipe(req);
+            } catch (error) {
+                console.error('Erro ao preparar o formulário:', error);
+                reject(error);
+            }
+        });
+    }
 }
 
 module.exports = new ServerManagementService();

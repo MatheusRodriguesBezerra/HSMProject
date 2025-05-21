@@ -95,6 +95,52 @@ class UserController {
             return res.status(500).json({ error: 'Erro interno do servidor' });
         }
     }
+
+    async verifySignature(req, res) {
+        try {
+            if (!req.user.userId) {
+                return res.status(401).json({ error: 'Usuário não autenticado' });
+            }
+
+            const { userName } = req.body;
+
+            if (!userName) {
+                return res.status(400).json({ error: 'Nome do usuário é obrigatório' });
+            }
+
+            if (!req.files || !req.files.file || !req.files.signature) {
+                return res.status(400).json({ error: 'Arquivo e assinatura são obrigatórios' });
+            }
+
+            console.log('req.files', req.files);
+
+            const file = req.files.file[0];
+            const signatureFile = req.files.signature[0];
+
+            console.log('file', file);
+            console.log('signatureFile', signatureFile);
+
+            if (!file || !signatureFile) {
+                return res.status(400).json({ error: 'Arquivo ou assinatura inválidos' });
+            }
+
+            const result = await ServerManagementService.verifySignature(userName, file, signatureFile);
+
+            // Limpar arquivos temporários após o processamento
+            const fs = require('fs');
+            if (file.path && fs.existsSync(file.path)) {
+                fs.unlinkSync(file.path);
+            }
+            if (signatureFile.path && fs.existsSync(signatureFile.path)) {
+                fs.unlinkSync(signatureFile.path);
+            }
+
+            return res.json(result);
+        } catch (error) {
+            console.error('Erro ao verificar assinatura:', error);
+            return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+    }
 }
 
 module.exports = new UserController();
