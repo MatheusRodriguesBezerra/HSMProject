@@ -70,8 +70,6 @@ class UserController {
 
             const result = await ServerManagementService.signFile(req.user.userId, req.file);
 
-            console.log('result', result);
-
             // Unir as assinaturas em um único arquivo
             const combinedSignature = Buffer.concat([
                 result.signature1.buffer,
@@ -112,13 +110,8 @@ class UserController {
                 return res.status(400).json({ error: 'Arquivo e assinatura são obrigatórios' });
             }
 
-            console.log('req.files', req.files);
-
             const file = req.files.file[0];
             const signatureFile = req.files.signature[0];
-
-            console.log('file', file);
-            console.log('signatureFile', signatureFile);
 
             if (!file || !signatureFile) {
                 return res.status(400).json({ error: 'Arquivo ou assinatura inválidos' });

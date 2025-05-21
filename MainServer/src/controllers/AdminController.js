@@ -16,15 +16,12 @@ class AdminController {
                 return res.status(400).json({ error: 'Nome e email são obrigatórios' });
             }
 
-            console.log(`Usuário autenticado: ${req.user.id}`);
-
             // Verifica se o usuário autenticado existe
             if (!req.user || !req.user.userId) {
                 return res.status(401).json({ error: 'Usuário não autenticado' });
             }
 
             const adminId = req.user.userId;
-            console.log(`Admin ID: ${adminId}`);
 
             // Verifica se o usuário já existe
             const [existingUser] = await sequelize.query('SELECT * FROM users WHERE name = :name', {
@@ -110,9 +107,9 @@ class AdminController {
         try {
             const { id } = req.params;
 
-            await sequelize.query('DELETE FROM users WHERE id = :id', {
-                replacements: { id },
-                type: QueryTypes.DELETE
+            await sequelize.query('UPDATE users SET status = :status WHERE id = :id', {
+                replacements: { id, status: 'deleted' },
+                type: QueryTypes.UPDATE
             });
 
             return res.status(200).json({ message: 'Usuário deletado com sucesso' });
