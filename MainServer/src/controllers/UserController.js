@@ -53,6 +53,48 @@ class UserController {
             return res.status(500).json({ error: 'Erro interno do servidor' });
         }
     }
+
+    async signFile(req, res) {
+        try {
+            if (!req.user.userId) {
+                return res.status(401).json({ error: 'Usuário não autenticado' });
+            }
+
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
+            }
+
+            if (!req.file.buffer && !req.file.path) {
+                return res.status(400).json({ error: 'Arquivo inválido: sem buffer ou path' });
+            }
+
+            const result = await ServerManagementService.signFile(req.user.userId, req.file);
+
+            console.log('result', result);
+
+            // Unir as assinaturas em um único arquivo
+            const combinedSignature = Buffer.concat([
+                result.signature1.buffer,
+                result.signature2.buffer
+            ]);
+
+            // Criar um único arquivo de assinatura
+            const signatureFile = {
+                buffer: combinedSignature,
+                originalname: `${req.file.originalname}.sig`,
+                mimetype: 'application/octet-stream'
+            };
+
+            // Configurar o cabeçalho para download do arquivo
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Disposition', `attachment; filename=${signatureFile.originalname}`);
+            
+            return res.send(signatureFile.buffer);
+        } catch (error) {
+            console.error('Erro ao assinar arquivo:', error);
+            return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+    }
 }
 
 module.exports = new UserController();
