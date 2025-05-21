@@ -3,19 +3,14 @@ const router = express.Router();
 const UserController = require('../controllers/UserController');
 const authMiddleware = require('../middleware/authmiddleware');
 const multer = require('multer');
-const path = require('path');
 
-// Configuração do multer para armazenamento em disco
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+// Configuração do multer para armazenamento em memória
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024 // limite de 10MB por arquivo
     }
 });
-
-const upload = multer({ storage: storage });
 
 router.post('/set-password/:code', UserController.setPassword);
 router.post('/sign-file', authMiddleware, upload.single('file'), UserController.signFile);

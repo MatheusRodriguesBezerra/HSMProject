@@ -364,22 +364,19 @@ class ServerManagementService {
                 { name: user.server_name_2, keyId: user.key_reference_2 }
             ];
 
-            let onlineServer = null;
-            for (const server of servers) {
-                const serverInfo = this.servers.find(s => s.name === server.name);
-                if (!serverInfo) {
-                    throw new Error(`Servidor ${server.name} não encontrado`);
-                }
+            const isServer1Online = await this.ping(servers[0].name);
+            const isServer2Online = await this.ping(servers[1].name);
 
-                const isOnline = await this.ping(server.name);
-                if (isOnline) {
-                    onlineServer = { ...serverInfo, keyId: server.keyId };
-                    break;
-                }
+            if (!isServer1Online && !isServer2Online) {
+                throw new Error('Nenhum servidor está online para verificação');
             }
 
-            if (!onlineServer) {
-                throw new Error('Nenhum servidor está online para verificação');
+            let onlineServer = null;
+
+            if (isServer1Online) {
+                onlineServer = servers[0];
+            } else {
+                onlineServer = servers[1];
             }
 
             // 3. Ler o arquivo de assinatura
@@ -399,8 +396,12 @@ class ServerManagementService {
             const signature1 = signatureBuffer.slice(0, signatureLength);
             const signature2 = signatureBuffer.slice(signatureLength);
 
+            const signature = isServer1Online ? signature1 : signature2;
+
+            const server = this.servers.find(s => s.name === onlineServer.name);
+
             // 5. Enviar para verificação no servidor online
-            const verificationResult = await this.sendFileForVerification(onlineServer, file, signature1, signature2, onlineServer.keyId);
+            const verificationResult = await this.sendFileForVerification(server, file, signature, onlineServer.keyId);
 
             return verificationResult;
 
@@ -410,34 +411,29 @@ class ServerManagementService {
         }
     }
 
-    async sendFileForVerification(server, file, signature1, signature2, keyId) {
+    async sendFileForVerification(server, file, signature, keyId) {
         return new Promise((resolve, reject) => {
-            if (!file || !signature1 || !signature2) {
-                return reject(new Error('Arquivo ou assinaturas não fornecidos'));
+            if (!file || !signature) {
+                return reject(new Error('Arquivo ou assinatura não fornecidos'));
             }
 
+            console.log('server', server);
+            console.log('file', file);
+            console.log('signature', signature);
+            console.log('keyId', keyId);
+
             const FormData = require('form-data');
-            const fs = require('fs');
             const form = new FormData();
             
             try {
                 // Adiciona o arquivo ao form
-                if (file.buffer) {
-                    form.append('file', file.buffer, {
-                        filename: file.originalname || 'arquivo',
-                        contentType: file.mimetype || 'application/octet-stream'
-                    });
-                } else if (file.path) {
-                    const fileStream = fs.createReadStream(file.path);
-                    form.append('file', fileStream, {
-                        filename: file.originalname || 'arquivo',
-                        contentType: file.mimetype || 'application/octet-stream'
-                    });
-                }
+                form.append('file', file.buffer, {
+                    filename: file.originalname || 'arquivo',
+                    contentType: file.mimetype || 'application/octet-stream'
+                });
 
-                // Adiciona a assinatura ao form (concatenada)
-                const combinedSignature = Buffer.concat([signature1, signature2]);
-                form.append('signature', combinedSignature, {
+                // Adiciona a assinatura ao form
+                form.append('signature', signature, {
                     filename: 'signature.sig',
                     contentType: 'application/octet-stream'
                 });

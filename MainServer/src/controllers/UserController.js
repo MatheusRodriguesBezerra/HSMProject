@@ -126,15 +126,6 @@ class UserController {
 
             const result = await ServerManagementService.verifySignature(userName, file, signatureFile);
 
-            // Limpar arquivos temporários após o processamento
-            const fs = require('fs');
-            if (file.path && fs.existsSync(file.path)) {
-                fs.unlinkSync(file.path);
-            }
-            if (signatureFile.path && fs.existsSync(signatureFile.path)) {
-                fs.unlinkSync(signatureFile.path);
-            }
-
             return res.json(result);
         } catch (error) {
             console.error('Erro ao verificar assinatura:', error);
