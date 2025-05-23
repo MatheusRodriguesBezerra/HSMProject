@@ -29,23 +29,43 @@ Um simulador de HSM que implementa as operações criptográficas e de seguranç
 - PostgreSQL
 - npm ou yarn
 
+### Criar e rodaar a base de dados
+
+### Configurar os ficheiros .env de configuração
+
 ### Configuração e Execução
 
 1. **HSMServer (Primeiro)**
 ```bash
 cd HSMServer
 npm install
-npm run dev
+npm start
 ```
-O HSMServer estará disponível em `http://localhost:3001`
+O HSMServer 1 estará disponível em `http://localhost:8080`
 
 2. **MainServer (Segundo)**
 ```bash
 cd MainServer
 npm install
-npm run dev
+npm start -- 8080 hsm1
 ```
-O MainServer estará disponível em `http://localhost:3000`
+O HSMServer 2 estará disponível em `http://localhost:8081`
+
+2. **MainServer (Segundo)**
+```bash
+cd MainServer
+npm install
+npm start -- 8081 hsm2
+```
+O HSMServer 1 estará disponível em `http://localhost:8082`
+
+2. **MainServer (Segundo)**
+```bash
+cd MainServer
+npm install
+npm start -- 8082 hsm2
+```
+O MainServer estará disponível em `https://localhost:3443`
 
 ## Fluxo de Operação
 

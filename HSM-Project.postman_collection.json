@@ -1,0 +1,840 @@
+{
+	"info": {
+		"_postman_id": "103c7e01-35b0-41fd-866a-a9417e4ad7bc",
+		"name": "HSM-Project",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "31540462",
+		"_collection_link": "https://hsm-project-4939.postman.co/workspace/HSM-Project-Workspace~e0a94099-6ce1-4f3b-83ba-fab949cecca9/collection/31540462-103c7e01-35b0-41fd-866a-a9417e4ad7bc?action=share&source=collection_link&creator=31540462"
+	},
+	"item": [
+		{
+			"name": "MainServer",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"matheus1\",\r\n    \"password\": \"1234\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:3443/auth/login",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "### Auth Login\n\nThis endpoint is used to authenticate a user and obtain a token for accessing protected resources.\n\n#### Request Body\n\n- `name`: (string) The username of the user.\n    \n- `password`: (string) The password of the user.\n    \n\n#### Response\n\n- Status: 200\n    \n- Content-Type: application/json\n    \n- `token`: (string) The authentication token for accessing protected resources."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Get Users",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:3443/admin/get-users",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"admin",
+								"get-users"
+							]
+						},
+						"description": "This endpoint is used to create a new user with the provided name and email.\n\n### Request\n\n- Method: GET\n    \n- Endpoint: `localhost:3000/admin/create-user`\n    \n- No request body for a GET request\n    \n\n### Response\n\nThe response will include the details of the newly created user, such as the user ID, name, and email."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Get Logs",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:3443/admin/get-logs",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"admin",
+								"get-logs"
+							]
+						},
+						"description": "This endpoint is used to create a new user with the provided name and email.\n\n### Request\n\n- Method: GET\n    \n- Endpoint: `localhost:3000/admin/create-user`\n    \n- No request body for a GET request\n    \n\n### Response\n\nThe response will include the details of the newly created user, such as the user ID, name, and email."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Server Status",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0Nzc4NDYyMiwiZXhwIjoxNzQ3Nzg4MjIyfQ.L0RAgb1-LboMIbOk0wbYY8ljGzqsdoK6Z4ONzihb038",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:3443/admin/status",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"admin",
+								"status"
+							]
+						},
+						"description": "This endpoint is used to create a new user with the provided name and email.\n\n### Request\n\n- Method: GET\n    \n- Endpoint: `localhost:3000/admin/create-user`\n    \n- No request body for a GET request\n    \n\n### Response\n\nThe response will include the details of the newly created user, such as the user ID, name, and email."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Create User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0Nzg0ODkwOSwiZXhwIjoxNzQ3ODUyNTA5fQ.xosqp1kdSRjdZk6oOiwbNKfNtNcSYR813iHShKhCLbQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"matheus1\",\r\n    \"email\": \"matheusrodbez@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:3443/admin/create-user",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"admin",
+								"create-user"
+							]
+						},
+						"description": "This API endpoint allows administrators to create a new user. The request should be sent to localhost:3000/admin/create-user using the HTTP POST method.\n\n**Only admin users may use this endpoint**\n\n### Request Body\n\nThe request body should be in raw JSON format and include the following parameters:\n\n- `name`: (string) The name of the new user.\n    \n- `email`: (string) The email address of the new user.\n    \n\nExample:\n\n``` json\n{\n    \"name\": \"matheus7\",\n    \"email\": \"matheusrodbez@gmail.com\"\n}\n\n ```\n\n### Response\n\nUpon successful execution, the API returns a status code of 201 and a JSON response with a message indicating the outcome of the operation.\n\nExample Response:\n\n``` json\n{\n    \"message\": \"\"\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Clean Old Logs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "localhost:3000/admin/get-users",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:3443/admin/logs/clean",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"admin",
+								"logs",
+								"clean"
+							]
+						},
+						"description": "### Delete Admin Logs Clean\n\nThis endpoint is used to delete all logs related to the admin.\n\n#### Request Body\n\nThis request does not require a request body.\n\n#### Response\n\nThe response will not contain a body, but will indicate the success or failure of the deletion operation."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Delete User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "localhost:3000/admin/get-users",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:3443/admin/delete-user/:id",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"admin",
+								"delete-user",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "This endpoint is used to delete a specific user identified by the provided ID.\n\n### Request Body\n\nThis request does not require a request body.\n\n### Response\n\nUpon successful deletion, the response will not contain a body, and the status code will indicate a successful operation. If the user with the provided ID does not exist, the response will also not contain a body, and the status code will indicate that the user was not found."
+					},
+					"response": []
+				},
+				{
+					"name": "User - Set Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"newpwd\": \"1234\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:3443/user/set-password/:code",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"user",
+								"set-password",
+								":code"
+							],
+							"variable": [
+								{
+									"key": "code",
+									"value": "96177F"
+								}
+							]
+						},
+						"description": "### Set User Password\n\nThis endpoint is used to set a new password for a user by providing a verification code.\n\n#### Request Body\n\n- `newpwd` (string, required): The new password for the user.\n    \n\n#### Response\n\nThe response for this request will be a JSON object following the schema below:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"description\": \"Indicates the status of the password update.\"\n    }\n  }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "User - Sign File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIzLCJ0eXBlIjoibG9naW4iLCJpYXQiOjE3NDc4NjUwNDgsImV4cCI6MTc0Nzg2ODY0OH0.Elqh9mX-konCPVfAcE58C4OiUe0bWit0NB_MhaESxNc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:3443/user/sign-file",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"user",
+								"sign-file"
+							]
+						},
+						"description": "### User Sign File\n\nThe `POST` request is used to sign a file for the user.\n\n#### Request Body\n\n- `file` (file): The file to be signed.\n    \n\n#### Response\n\nThe response of this request is documented as a JSON schema."
+					},
+					"response": []
+				},
+				{
+					"name": "User - Verify Signature",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIzLCJ0eXBlIjoibG9naW4iLCJpYXQiOjE3NDc4NjUwNDgsImV4cCI6MTc0Nzg2ODY0OH0.Elqh9mX-konCPVfAcE58C4OiUe0bWit0NB_MhaESxNc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.txt"
+								},
+								{
+									"key": "signature",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.txt.bad.sig"
+								},
+								{
+									"key": "userName",
+									"value": "matheus1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:3443/user/verify-signature",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"user",
+								"verify-signature"
+							]
+						},
+						"description": "### Verify User Signature\n\nThis endpoint is used to verify the signature of a user. It is an HTTP POST request that requires form-data in the request body.\n\n#### Request Body\n\n- `file` (file): The file containing the user's signature.\n    \n- `signature` (file): The signature to be verified.\n    \n- `userName` (text): The username of the user.\n    \n\n#### Response\n\nThe response of this request follows the JSON schema below:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"verificationStatus\": {\n      \"type\": \"string\",\n      \"description\": \"The status of the signature verification.\"\n    }\n  }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "User - Encrypt File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIzLCJ0eXBlIjoibG9naW4iLCJpYXQiOjE3NDc4NjQzNjIsImV4cCI6MTc0Nzg2Nzk2Mn0.y5HAdg64OK9JB7vzVreU41d6bt-Gu8hNzIIxTalUZ_M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userName",
+									"value": "matheus1",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:3443/user/encrypt",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"user",
+								"encrypt"
+							]
+						},
+						"description": "### Encrypt User Data\n\nThis API endpoint is used to encrypt user data.\n\n#### Request Body\n\n- `userName` (text): The username of the user.\n    \n- `file` (file): The file to be encrypted.\n    \n\n#### Response\n\nThe response of this request is a JSON schema."
+					},
+					"response": []
+				},
+				{
+					"name": "User - Decrypt File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIzLCJ0eXBlIjoibG9naW4iLCJpYXQiOjE3NDc4NjQzNjIsImV4cCI6MTc0Nzg2Nzk2Mn0.y5HAdg64OK9JB7vzVreU41d6bt-Gu8hNzIIxTalUZ_M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.txt.enc"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:3443/user/decrypt",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "3443",
+							"path": [
+								"user",
+								"decrypt"
+							]
+						},
+						"description": "### Decrypt User Data\n\nThis endpoint allows you to decrypt user data by sending a POST request to the specified URL.\n\n#### Request Body\n\n- `file` (file): The file containing the encrypted user data to be decrypted.\n    \n\n#### Response\n\nThe response will contain the decrypted user data."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "HSMServer",
+			"item": [
+				{
+					"name": "Ping",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "postman-cloud:///1f03288f-5cd7-4830-9159-40e7052ae35a"
+								},
+								{
+									"key": "signature",
+									"type": "file",
+									"src": "postman-cloud:///1f0328d5-f70a-4240-b71e-ed862cf9d317"
+								},
+								{
+									"key": "keyId",
+									"value": "9aa1ff16-12da-4e7b-8193-37c568fd5dfa",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/ping",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"ping"
+							]
+						},
+						"description": "# Ping Endpoint\n\nThis endpoint sends a GET request to localhost:8080/ping in order to check the availability of the server.\n\n### Request\n\nThe request should include the following form-data parameters:\n\n- `file` (file) - The file to be sent.\n    \n- `signature` (file) - The signature file.\n    \n- `keyId` (text) - The ID of the key.\n    \n\n### Response\n\nThe response of this request is a JSON object with the following schema:\n\n``` json\n{\n  \"status\": \"string\",\n  \"message\": \"string\"\n}\n\n ```\n\nThe `status` field indicates the status of the server, and the `message` field provides additional information."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Public Key",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "postman-cloud:///1f03288f-5cd7-4830-9159-40e7052ae35a"
+								},
+								{
+									"key": "signature",
+									"type": "file",
+									"src": "postman-cloud:///1f0328d5-f70a-4240-b71e-ed862cf9d317"
+								},
+								{
+									"key": "keyId",
+									"value": "9aa1ff16-12da-4e7b-8193-37c568fd5dfa",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/getPublicKey?keyId=10edbe29-6080-48cd-a9a0-460b26e6388f",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"getPublicKey"
+							],
+							"query": [
+								{
+									"key": "keyId",
+									"value": "10edbe29-6080-48cd-a9a0-460b26e6388f"
+								}
+							]
+						},
+						"description": "### Get Public Key\n\nThis endpoint is used to retrieve the public key associated with a specific key ID.\n\n#### Request\n\n- Method: GET\n    \n- URL: `localhost:8080/getPublicKey`\n    \n- Query Parameters:\n    \n    - keyId (text): The unique identifier of the key for which the public key is to be retrieved.\n        \n\n#### Request Body\n\n- Type: form-data\n    \n- Parameters:\n    \n    - file (file): The file to be processed.\n        \n    - signature (file): The signature of the file.\n        \n    - keyId (text): The unique identifier of the key.\n        \n\n#### Response\n\nThe response will contain the public key associated with the provided key ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Key Pair",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "localhost:8080/generateKeyPair",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"generateKeyPair"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sign File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.txt"
+								},
+								{
+									"key": "keyId",
+									"value": "92aa7065-8b9d-421c-ba38-ab278ac53408",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/sign",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"sign"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Signature",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.txt"
+								},
+								{
+									"key": "signature",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/test.sig"
+								},
+								{
+									"key": "keyId",
+									"value": "92aa7065-8b9d-421c-ba38-ab278ac53408",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/verify",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"verify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Encrypt RSA",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "postman-cloud:///1f03288f-5cd7-4830-9159-40e7052ae35a"
+								},
+								{
+									"key": "keyId",
+									"value": "0ff16865-991b-4f22-86fe-9cf7001a1fb9",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/encrypt/rsa",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"encrypt",
+								"rsa"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Decrypt RSA",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInR5cGUiOiJsb2dpbiIsImlhdCI6MTc0NzIzMjEwOSwiZXhwIjoxNzQ3MjM1NzA5fQ.GLi0jmEVZyX1WFbjUcmpejLlplqNoTBzdDLVZlAJkHc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Matheus/Downloads/encrypted.test.txt"
+								},
+								{
+									"key": "keyId",
+									"value": "0ff16865-991b-4f22-86fe-9cf7001a1fb9",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/decrypt/rsa",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"decrypt",
+								"rsa"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "",
+			"type": "default"
+		}
+	]
+}

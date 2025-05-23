@@ -53,30 +53,31 @@ Este é o servidor principal do projeto HSM (Hardware Security Module), respons�
 O projeto requer as seguintes variáveis de ambiente:
 
 ```env
-# Servidor
-PORT=3000
-NODE_ENV=development
-
-# Banco de Dados
 DB_HOST=localhost
+DB_USER=seu_usuario_db
+DB_PASS=sua_senha_db
+DB_NAME=nome_do_banco
 DB_PORT=5432
-DB_NAME=hsm_db
-DB_USER=seu_usuario
-DB_PASSWORD=sua_senha
+DB_SSL=false
+PORT=3000
+MAIL_HOST=smtp.provedor.com
+MAIL_PORT=587
+MAIL_SECURE=true
+MAIL_USER=seu_email@provedor.com
+MAIL_PASS=sua_senha_email
+JWT_SECRET=seu_jwt_secret
+GOOGLE_ACCESS_TOKEN=seu_google_token
 
-# JWT
-JWT_SECRET=seu_secret_key
-JWT_EXPIRATION=24h
-
-# Email
-SMTP_HOST=smtp.exemplo.com
-SMTP_PORT=587
-SMTP_USER=seu_email
-SMTP_PASS=sua_senha
-
-# HSM
-HSM_IP=192.168.1.100
-HSM_PORT=1234
+HSMServersLength=numero_de_hsm
+HSMInstance1=hsm1
+HSMIp1=locahost
+HSMPort1=8080
+HSMInstance2=hsm2 
+HSMIp2=locahost
+HSMPort2=8081
+HSMInstance3=hsm3
+HSMIp3=locahost
+HSMPort3=8082
 ```
 
 ## Scripts Disponíveis

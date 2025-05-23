@@ -73,23 +73,7 @@ cp .env.example .env
 
 4. Configure as variáveis de ambiente no arquivo `.env`:
 ```env
-# Configurações do Servidor
-PORT=3000
-NODE_ENV=development
-
-# Configurações de Segurança
-SESSION_SECRET=sua_chave_secreta
-MAX_SESSIONS=10
-KEY_ROTATION_INTERVAL=86400
-
-# Configurações de Storage
-TEMP_DIR=./temp
-KEYS_DIR=./keys
-BACKUP_DIR=./backup
-
-# Configurações de Log
-LOG_LEVEL=info
-AUDIT_LOG=true
+ALLOWED_IP=<ip_permitido>
 ```
 
 ## Endpoints da API
