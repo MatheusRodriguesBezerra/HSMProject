@@ -1,6 +1,6 @@
-# Projeto HSM - Sistema de Gerenciamento de Hardware Security Module
+ # Projeto HSM - Sistema de Gerenciamento de Hardware Security Module
 
-Este projeto implementa uma solução completa de gerenciamento de HSM (Hardware Security Module), consistindo em dois servidores que trabalham em conjunto para fornecer operações criptográficas seguras e gerenciamento de chaves.
+Este projeto implementa uma solução completa de gerenciamento de HSM (Hardware Security Module), consistindo em dois tipos de servidores que trabalham em conjunto para fornecer operações criptográficas seguras e gerenciamento de chaves.
 
 ## Arquitetura do Sistema
 
@@ -81,4 +81,4 @@ Para contribuir com o projeto:
 
 ## Licença
 
-Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes. 
+Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
